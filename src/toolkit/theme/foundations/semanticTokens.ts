@@ -127,6 +127,19 @@ const semanticTokens: ThemingConfig['semanticTokens'] = {
           DEFAULT: { value: { _light: '{colors.purple.50}', _dark: '{colors.gray.800}' } },
         },
       },
+      icon_background: {
+        bg: {
+          DEFAULT: { value: { _light: '{colors.gray.50}', _dark: '{colors.whiteAlpha.50}' } },
+        },
+      },
+      pagination: {
+        fg: {
+          DEFAULT: { value: { _light: '{colors.blackAlpha.800}', _dark: '{colors.gray.50}' } },
+        },
+        border: {
+          DEFAULT: { value: { _light: '{colors.gray.100}', _dark: '{colors.whiteAlpha.100}' } },
+        },
+      },
       icon_secondary: {
         fg: {
           DEFAULT: { value: { _light: '{colors.gray.400}', _dark: '{colors.gray.500}' } },
