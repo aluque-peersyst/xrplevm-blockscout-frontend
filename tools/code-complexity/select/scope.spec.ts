@@ -17,12 +17,18 @@ describe('isInScope', () => {
   it('includes the plain-JS extensions', () => {
     expect(isInScope('src/server/redirects.js')).toBe(true);
     expect(isInScope('tools/mutation-testing/eslint/well-formed-disable.mjs')).toBe(true);
-    expect(isInScope('tools/scripts/legacy.cjs')).toBe(true);
+    expect(isInScope('tools/release/legacy.cjs')).toBe(true);
   });
 
-  it('excludes deploy/ — it is outside ESLint and the root tsconfig (issue #3675)', () => {
+  it('includes the container-startup tools under deploy/tools/', () => {
+    expect(isInScope('deploy/tools/envs-validator/index.ts')).toBe(true);
+    expect(isInScope('deploy/tools/envs-validator/schemas/features/rollup.ts')).toBe(true);
+    expect(isInScope('deploy/tools/favicon-generator/index.js')).toBe(true);
+    expect(isInScope('deploy/tools/llms-txt-generator/generate-standard.ts')).toBe(true);
+  });
+
+  it('excludes the deploy shell scripts', () => {
     expect(isInScope('deploy/scripts/run.ts')).toBe(false);
-    expect(isInScope('deploy/tools/envs-validator/index.ts')).toBe(false);
   });
 
   it('excludes test support and configuration', () => {
@@ -32,7 +38,7 @@ describe('isInScope', () => {
     expect(isInScope('tools/code-complexity/vitest.config.ts')).toBe(false);
   });
 
-  it('excludes everything outside the two allowlisted roots', () => {
+  it('excludes everything outside the allowlisted roots', () => {
     expect(isInScope('startup.node.ts')).toBe(false);
     expect(isInScope('instrumentation.ts')).toBe(false);
     expect(isInScope('docs/example.ts')).toBe(false);

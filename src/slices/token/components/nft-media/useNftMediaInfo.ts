@@ -2,15 +2,15 @@
 
 import type { UseQueryResult } from '@tanstack/react-query';
 import { useQuery } from '@tanstack/react-query';
-import type { DynamicRoute } from 'nextjs-routes';
-import { route } from 'nextjs-routes';
 
 import type { schemas } from '@blockscout/api-types';
 
 import config from 'src/config';
+import type { DynamicRoute } from 'src/shared/router/routes';
+import { route } from 'src/shared/router/routes';
 
 import type { MediaType, Size, TransportType } from './utils';
-import { getPreliminaryMediaType } from './utils';
+import { getIpfsUri, getPreliminaryMediaType } from './utils';
 
 interface Params {
   data: schemas['TokenInstance'] | schemas['TokenInstanceInTokenInstancesList'];
@@ -177,12 +177,13 @@ function getIpfsData(url: unknown, mediaType: MediaType): MediaInfo | undefined 
     return;
   }
 
-  if (!url.includes('ipfs')) {
+  const ipfsUri = getIpfsUri(url);
+  if (!ipfsUri) {
     return;
   }
 
   return {
-    src: url,
+    src: ipfsUri,
     mediaType,
     transport: 'ipfs',
   };

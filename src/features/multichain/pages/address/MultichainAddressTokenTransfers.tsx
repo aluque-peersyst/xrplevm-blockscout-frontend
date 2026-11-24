@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: LicenseRef-Blockscout
 
 import { HStack } from '@chakra-ui/react';
-import { useRouter } from 'next/router';
 import React from 'react';
 
 import type * as multichain from '@blockscout/multichain-aggregator-types';
@@ -16,6 +15,7 @@ import useAddressCountersQuery from 'src/slices/address/hooks/useAddressCounters
 import AddressTokenTransfersLocal from 'src/slices/address/pages/details/token-transfers/AddressTokenTransfersLocal';
 import useAddressTokenTransfersQuery from 'src/slices/address/pages/details/token-transfers/useAddressTokenTransfersQuery';
 import TokenTransferFilter from 'src/slices/token-transfer/components/TokenTransferFilter';
+import { useTokenTransferColumns } from 'src/slices/token-transfer/hooks/useTokenTransferColumns';
 import { getTokenFilterValue } from 'src/slices/token/utils/list-utils';
 
 import AddressAdvancedFilterLink from 'src/features/advanced-filter/components/AddressAdvancedFilterLink';
@@ -30,10 +30,12 @@ import { useChainValue } from 'src/features/multichain/hooks/useChainValue';
 
 import config from 'src/config';
 import useIsMobile from 'src/shared/hooks/useIsMobile';
+import ColumnsButton from 'src/shared/lists/columns/ColumnsButton';
 import Pagination from 'src/shared/pagination/Pagination';
 import useApiPaginatedQuery from 'src/shared/pagination/useApiPaginatedQuery';
 import { generateListStub } from 'src/shared/pagination/utils';
 import getQueryParamString from 'src/shared/router/get-query-param-string';
+import { useRouter } from 'src/shared/router/useRouter';
 
 import { EmptyState } from 'src/toolkit/chakra/empty-state';
 import RoutedTabs from 'src/toolkit/components/RoutedTabs/RoutedTabs';
@@ -86,6 +88,7 @@ const MultichainAddressTokenTransfers = ({ addressData, isLoading }: Props) => {
     enabled: isLocalTab && !isLoading && chainIds.length > 0,
     chain: chainData,
   });
+  const columnsState = useTokenTransferColumns('address', { typeFilter: transfersQueryLocal.filters.type, chainConfig: chainData?.app_config });
 
   const countersQueryLocal = useAddressCountersQuery({
     hash,
@@ -153,6 +156,15 @@ const MultichainAddressTokenTransfers = ({ addressData, isLoading }: Props) => {
               isLoading={ transfersQueryLocal.query.isInitialLoading }
               chainConfig={ chainData?.app_config }
             />
+            <ColumnsButton
+              tableColumns={ columnsState.selectableColumns }
+              columns={ columnsState.checkedColumns }
+              onChange={ columnsState.onColumnsChange }
+              onOrderChange={ columnsState.onColumnsReorder }
+              selected={ columnsState.isCustomized }
+              onReset={ columnsState.onColumnsReset }
+              isLoading={ transfersQueryLocal.query.isInitialLoading }
+            />
             { chainSelect }
             <CsvExport
               type="address_token_transfers"
@@ -191,22 +203,23 @@ const MultichainAddressTokenTransfers = ({ addressData, isLoading }: Props) => {
       id: 'token_transfers_cross_chain',
       title: 'Cross-chain',
       component: config.features.crossChainTxs.isEnabled ? (
-        <>
-          { isMobile && !isLocalTab && transfersQueryCrossChain.pagination.isVisible && (
+        <TokenTransfersCrossChainContent
+          items={ transfersQueryCrossChain.data?.items }
+          isLoading={ transfersQueryCrossChain.isInitialLoading }
+          isTransitioning={ transfersQueryCrossChain.isTransitioning }
+          isError={ transfersQueryCrossChain.isError }
+          pagination={ transfersQueryCrossChain.pagination }
+          tableTop={ ACTION_BAR_HEIGHT_DESKTOP }
+          currentAddress={ hash }
+          resetKey={ transfersQueryCrossChain.queryHash }
+          filters={ transfersQueryCrossChain.filters }
+          onFilterChange={ transfersQueryCrossChain.onFilterChange }
+          actionBar={ isMobile && !isLocalTab && transfersQueryCrossChain.pagination.isVisible && (
             <ActionBar>
               <Pagination ml="auto" { ...transfersQueryCrossChain.pagination }/>
             </ActionBar>
           ) }
-          <TokenTransfersCrossChainContent
-            items={ transfersQueryCrossChain.data?.items }
-            isLoading={ transfersQueryCrossChain.isInitialLoading }
-            isTransitioning={ transfersQueryCrossChain.isTransitioning }
-            isError={ transfersQueryCrossChain.isError }
-            pagination={ transfersQueryCrossChain.pagination }
-            tableTop={ ACTION_BAR_HEIGHT_DESKTOP }
-            currentAddress={ hash }
-          />
-        </>
+        />
       ) : <EmptyState type="coming_soon"/>,
     },
     {
@@ -222,6 +235,7 @@ const MultichainAddressTokenTransfers = ({ addressData, isLoading }: Props) => {
               onTypeFilterChange={ transfersQueryLocal.onTypeFilterChange }
               onAddressFilterChange={ transfersQueryLocal.onAddressFilterChange }
               addressHash={ hash }
+              columnsState={ columnsState }
             />
           </SocketProvider>
         </MultichainProvider>

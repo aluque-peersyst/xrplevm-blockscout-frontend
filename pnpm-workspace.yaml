@@ -4,10 +4,12 @@ injectWorkspacePackages: true
 
 packages:
   - 'src/toolkit/package'
+  - 'deploy/tools/assets-downloader'
   - 'deploy/tools/envs-validator'
   - 'deploy/tools/feature-reporter'
   - 'deploy/tools/favicon-generator'
   - 'deploy/tools/sitemap-generator'
+  - 'deploy/tools/og-image-generator'
   - 'deploy/tools/multichain-config-generator'
   - 'deploy/tools/essential-dapps-chains-config-generator'
   - 'deploy/tools/llms-txt-generator'
@@ -30,7 +32,7 @@ overrides:
   node-forge: "1.3.2"
   brace-expansion: "1.1.12"
   js-yaml: "4.1.1"
-  "@noble/hashes": "1.8.0"
+  "@noble/hashes@1": "1.8.0"
   "vite-plugin-dts>brace-expansion": "2.0.2"
   "minimatch@10>brace-expansion": "5.0.9"
   protobufjs: "7.5.5"
@@ -41,7 +43,7 @@ allowBuilds:
   '@ipshipyard/node-datachannel': true
   '@reown/appkit': false
   '@scarf/scarf': false
-  '@specify-sh/sdk': false
+  '@specify-sh/publisher-sdk': false
   '@tree-sitter-grammars/tree-sitter-yaml': false
   bigint-buffer: false
   bufferutil: false
@@ -75,4 +77,3 @@ minimumReleaseAgeExclude:
 
 patchedDependencies:
   '@lifi/widget-light@4.3.2': patches/@lifi__widget-light@4.3.2.patch
-  '@stryker-mutator/vitest-runner@10.0.0': patches/@stryker-mutator__vitest-runner@10.0.0.patch

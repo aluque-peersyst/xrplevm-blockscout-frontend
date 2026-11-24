@@ -29,10 +29,8 @@ Gather, in roughly this order:
 3. **The API** — for every endpoint the issue names, fetch a real sample response (the `resolve-api-url`
    skill resolves instance URLs; then `curl`). Note pagination/sorting/filtering params and whether the API
    is production-deployed or staging-only.
-4. **Figma mockups** — via the Figma MCP tools, **enumerate-only**: list screens/frames, their elements,
-   columns, states, and record a node link per screen. Do **not** extract visual/styling details — appearance
-   stays with the mockups and the `[human]` style leaves (see `.agents/delegation.md`). If the Figma
-   MCP is not connected, have the developer describe the mockups instead.
+4. **Figma mockups** — enumerate the Figma links the task carries: one node link per screen and per
+   state, hidden layers ignored. Record the links for the spec's UI inventory.
 
 Then run two mechanical cross-checks; every mismatch becomes an open question for the backend owner or PM:
 
@@ -68,10 +66,19 @@ of them, and marching through all six regardless is how a five-minute task turns
    **which upcoming backend release ships the required API changes** (so the frontend release notes can
    reference it) — usually a question for the backend owner.
 4. **UI inventory** — routes, navigation entry points (where do users find this?), cross-links to existing
-   entity pages. Behavioral states and mobile behavior are standard — don't ask.
+   entity pages. Behavioral states and mobile behavior are standard — don't ask; the executor skills'
+   own inputs are `to-tickets`' to collect.
 5. **Analytics & links** — custom Mixpanel events **only** if there's a new interactive element worth
    tracking (page views are auto-wired); UTM query params on any hardcoded links to Blockscout or partner
    products.
+
+**The demo question is asked on every task**, because `none` is a decision and the land step reads it:
+which preset(s) the demo deploys on. What an answer may hold — the preset list, the two-entry cap and the
+`(review-2)` mark — is [`../deploy-demo/demo-entries.md`](../deploy-demo/demo-entries.md); offer those
+options and recommend one from the task: a chain-type feature → that chain's preset; multichain →
+`multichain`; generic UI → `staging`; nothing to deploy (agent instructions, tooling, CI) → `none`. A
+specced task records the answer in the spec header's `Demo` row (`to-spec`); a small task keeps it in
+session for `create-pr` Mode C's deploy offer.
 
 Testing is **not** an interview domain — the capability boundary in `.agents/delegation.md` settles it.
 Neither is human verification: which acceptance criteria are `(human)` follows the standing rule in "The
@@ -108,16 +115,14 @@ routes it manually.
 
 ### Watch for replies and drive each question to settled
 
-Once the questions are sent, don't hand the reply round-trip back to the developer to poll. Launch the
-**`slack-watch`** skill with one `CHANNEL:THREAD_TS` argument per `pending` question thread (the channel
-id and parent `ts` from each `slack_send_message` you just sent). That skill owns how to start, stop, and
-relaunch on Claude Code vs Cursor — follow it. Adding or resolving a question later means stopping the
-watcher and relaunching with the new thread list; questions move at human pace, so the restart is free.
-If the tokens aren't set up, `slack-watch` guides the developer through it; until then, the developer
-polls manually as before.
+Once the questions are sent, don't hand the reply round-trip back to the developer to poll. Run the
+**`slack-subscribe`** skill — one registration per `pending` question thread (the channel id and parent
+`ts` from each `slack_send_message` you just sent), all in this turn — then stop once; a settled question
+is unsubscribed the same way. Outside
+local Claude Code that skill stops at its readiness check, and the developer polls manually as before.
 
-On each `NEW …` notification, read the reply with `slack_read_thread` on that `thread_ts`, then for the
-question that thread belongs to:
+Each forwarded reply arrives as a cross-session message carrying its `thread_ts`. Read the thread with
+`slack_read_thread`, then for the question that thread belongs to:
 
 - **Assess** the reply against the question's `Resolved when:` criterion — session-held here, since this
   runs before `to-spec`; it only becomes a `questions.md` line once `to-spec` writes one (lifecycle step 2).
@@ -145,5 +150,5 @@ Decide, by a rough sizing judgment, whether the task needs a spec — one sessio
 breakdown is needed for this call ("Not every task needs a spec" in `.agents/tasks/README.md`).
 
 - **Small task** — implement it in this same session, then hand off to the `create-pr` skill. If a `pending` question blocks the work, wait for the
-  reply and pick the implementation back up here.
+  reply and pick the implementation back up here. A small task gets no spec and no readout.
 - **Larger task** — suggest proceeding with the `to-spec` skill **in this same session**.

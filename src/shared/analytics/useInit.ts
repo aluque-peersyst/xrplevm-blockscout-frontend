@@ -1,13 +1,13 @@
 // SPDX-License-Identifier: LicenseRef-Blockscout
 
 import { capitalize } from 'es-toolkit';
-import { useRouter } from 'next/router';
 import React from 'react';
 import { deviceType } from 'react-device-detect';
 
 import config from 'src/config';
 import dayjs from 'src/shared/date-and-time/dayjs';
 import getQueryParamString from 'src/shared/router/get-query-param-string';
+import { useRouter } from 'src/shared/router/useRouter';
 import * as cookies from 'src/shared/storage/cookies';
 
 import { SECOND } from 'src/toolkit/utils/consts';
@@ -38,15 +38,16 @@ function setupProvider(provider: AnalyticsProvider, { isAuth, uuid }: UserIdenti
     'User id': uuid,
     ...(multichainFeature.isEnabled ? { 'Cluster name': multichainFeature.cluster } : {}),
   });
-  provider.identify(uuid);
   // profile writes belong before the queue flush — a buffered `reset` (logout during
   // the deferral window) must not leave them on the anonymous post-reset profile
-  provider.peopleSet({
-    'Device Type': capitalize(deviceType),
-    ...(isAuth ? { 'With Account': true } : {}),
-  });
-  provider.peopleSetOnce({
-    'First Time Join': dayjs().toISOString(),
+  provider.identify(uuid, {
+    set: {
+      'Device Type': capitalize(deviceType),
+      ...(isAuth ? { 'With Account': true } : {}),
+    },
+    setOnce: {
+      'First Time Join': dayjs().toISOString(),
+    },
   });
 }
 

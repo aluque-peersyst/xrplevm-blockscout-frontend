@@ -46,11 +46,18 @@ export const ENVS_MAP: Record<string, Array<[string, string]>> = {
   xStarScore: [
     [ 'NEXT_PUBLIC_XSTAR_SCORE_URL', 'https://localhost:3115' ],
   ],
+  bubblemaps: [
+    [ 'NEXT_PUBLIC_BUBBLEMAPS_CHAIN_SLUG', 'eth' ],
+    [ 'NEXT_PUBLIC_BUBBLEMAPS_PARTNER_ID', 'demo' ],
+  ],
   hasContractAuditReports: [
     [ 'NEXT_PUBLIC_HAS_CONTRACT_AUDIT_REPORTS', 'true' ],
   ],
   blockHiddenFields: [
     [ 'NEXT_PUBLIC_VIEWS_BLOCK_HIDDEN_FIELDS', '["burnt_fees", "total_reward", "nonce"]' ],
+  ],
+  blockHiddenViews: [
+    [ 'NEXT_PUBLIC_VIEWS_BLOCK_HIDDEN_VIEWS', '["reorgs", "uncles"]' ],
   ],
   stabilityEnvs: [
     [ 'NEXT_PUBLIC_VIEWS_ADDRESS_HIDDEN_VIEWS', '["top_accounts"]' ],
@@ -100,7 +107,7 @@ export const ENVS_MAP: Record<string, Array<[string, string]>> = {
     [ 'NEXT_PUBLIC_INTEROP_ENABLED', 'true' ],
   ],
   tac: [
-    [ 'NEXT_PUBLIC_TAC_OPERATION_LIFECYCLE_API_HOST', 'http://localhost:3100' ],
+    [ 'NEXT_PUBLIC_TAC_OPERATION_LIFECYCLE_API_HOST', 'http://localhost:3010' ],
     [ 'NEXT_PUBLIC_TAC_TON_EXPLORER_URL', 'https://testnet.tonviewer.com' ],
   ],
   celo: [
@@ -142,6 +149,12 @@ export const ENVS_MAP: Record<string, Array<[string, string]>> = {
   ],
   additionalTokenTypes: [
     [ 'NEXT_PUBLIC_NETWORK_ADDITIONAL_TOKEN_TYPES', '[{"id":"ERC-7984","name":"ERC-7984"},{"id":"ERC-8056","name":"ERC-8056"}]' ],
+  ],
+  tokenActionButton: [
+    [
+      'NEXT_PUBLIC_TOKEN_ACTION_BUTTON_CONFIG',
+      '{"text":"Buy on Duck Portal","url":"https://portal.duck.io/swap?chainId=1&token={hash}","colors":{"_default":{"bg":["rgb(179, 167, 0)","rgb(134, 86, 239)"],"text":["white"]}}}',
+    ],
   ],
   verifiedAddresses: [
     [ 'NEXT_PUBLIC_IS_ACCOUNT_SUPPORTED', 'true' ],

@@ -1,11 +1,11 @@
 import type { PlaywrightTestConfig } from '@playwright/experimental-ct-react';
 import { devices, defineConfig } from '@playwright/experimental-ct-react';
 import react from '@vitejs/plugin-react';
-import type { Plugin } from 'esbuild';
 import svgr from 'vite-plugin-svgr';
-import tsconfigPaths from 'vite-tsconfig-paths';
 
 import appConfig from 'src/config';
+
+import { ctPort } from './playwright/utils/ports';
 
 const isInsideWorktree = __dirname.includes('/.claude/worktrees/');
 
@@ -63,13 +63,12 @@ const config: PlaywrightTestConfig = defineConfig({
     trace: 'on-first-retry',
 
     /* Port to use for Playwright component endpoint. */
-    ctPort: 3100,
+    ctPort,
 
     headless: true,
 
     ctViteConfig: {
       plugins: [
-        tsconfigPaths({ loose: true, ignoreConfigErrors: true }),
         react(),
         svgr({
           include: '**/*.svg',
@@ -93,15 +92,15 @@ const config: PlaywrightTestConfig = defineConfig({
             },
           },
         }),
-      ] as unknown as Array<Plugin>,
+      ],
       build: {
         // it actually frees some memory that vite needs a lot
         // https://github.com/storybookjs/builder-vite/issues/409#issuecomment-1152848986
         sourcemap: false,
         minify: false,
-        rollupOptions: {
+        rolldownOptions: {
           output: {
-            // Ensure __envs exists in every chunk so code (e.g. next/router, configs/app) that
+            // Ensure __envs exists in every chunk so code (e.g. configs/app) that
             // runs before index.ts/envs.js doesn't throw. Real envs are set when envs.js runs.
             //
             // Explanation:
@@ -116,6 +115,7 @@ const config: PlaywrightTestConfig = defineConfig({
         },
       },
       resolve: {
+        tsconfigPaths: true,
         alias: [
           // There is an issue with building these package using vite that I cannot resolve
           // The solution described here - https://github.com/vitejs/vite/issues/9703#issuecomment-1216662109
@@ -143,11 +143,13 @@ const config: PlaywrightTestConfig = defineConfig({
           // Fix for @libp2p/utils missing merge-options export
           { find: '@libp2p/utils/merge-options', replacement: 'merge-options' },
 
-          // Mock for @helia/verified-fetch to avoid build issues in tests
+          // Mocks for the Helia packages to avoid build issues in tests
           { find: '@helia/verified-fetch', replacement: './playwright/mocks/modules/@helia/verified-fetch.js' },
+          { find: /^@helia\/http$/, replacement: './playwright/mocks/modules/@helia/http.js' },
+          { find: /^helia$/, replacement: './playwright/mocks/modules/helia.js' },
 
-          // Mock for @specify-sh/sdk to avoid build issues in tests
-          { find: '@specify-sh/sdk', replacement: './playwright/mocks/modules/@specify-sh/sdk.js' },
+          // Mock for @specify-sh/publisher-sdk to avoid build issues in tests
+          { find: '@specify-sh/publisher-sdk', replacement: './playwright/mocks/modules/@specify-sh/publisher-sdk.js' },
         ],
       },
       define: {

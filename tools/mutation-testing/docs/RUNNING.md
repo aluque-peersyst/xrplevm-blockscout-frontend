@@ -30,6 +30,12 @@ Reports and Stryker's per-run sandbox live in this gitignored folder. A complete
 
 The key failure mode is mistaking a stale report for a fresh one. That is why each run clears previous output before starting, not after finishing.
 
+## One run per checkout
+
+The report files and the sandbox are shared, so a second run started in the same checkout would wipe the first's output mid-write and leave both reading each other's results. A run therefore holds a lock file in this folder for its whole duration, and a second run refuses to start — exit 1, naming the holder's pid, start time and selection. It does not wait. Parallel runs belong in separate worktrees, each with its own checkout.
+
+A run killed outright leaves its lock behind; the next run finds the pid dead, says so, and takes over. CI never meets the lock: one job is one checkout.
+
 ## In CI
 
 `.github/workflows/checks.yml` → the `mutation_tests` job, diff-scoped against `origin/main`, runs only on pull requests. Two details:
@@ -51,10 +57,9 @@ For the summary to be readable, `../vitest.config.ts` has to name a reporter: Vi
 
 ## Why Stryker needed repo-level plumbing
 
-Three integration issues are solved outside this folder and are easy to misdiagnose:
+Two integration issues are solved outside this folder and are easy to misdiagnose:
 
 - **`pnpm-workspace.yaml` has a scoped `minimatch@10>brace-expansion` override.** The repo globally pins `brace-expansion` to a 1.x security override, but Stryker's `minimatch` dependency needs the 5.x ESM build. Without the scoped override, Stryker does not boot. The global pin remains unchanged.
 - **`../stryker.config.json` explicitly lists the Vitest runner in `plugins`.** Otherwise Stryker discovers plugins by globbing its own `node_modules` scope, which pnpm's isolated layout prevents. The resulting “no TestRunner plugins were loaded” error looks like a missing dependency rather than a resolution-layout issue.
-- **`patches/` carries a pnpm patch for `@stryker-mutator/vitest-runner`.** Vitest 5 joins suite and test names with ` > `, while the runner filters tests by names joined with a space, so the filter matches nothing and every covered mutant reports `SURVIVED` — a 0% score on well-tested code is the symptom. Drop the patch once a Stryker release includes the fix for [stryker-js#6210](https://github.com/stryker-mutator/stryker-js/issues/6210); the patch is pinned to the runner version, so a bump fails the install until it is removed or regenerated.
 
 The config's `ignorePatterns` address the same problem: Stryker copies the project into a per-run sandbox, and without them the copy fails on symlinks under agent worktree directories. The allowlist is also what a test can read from inside the sandbox: `.agents/` is on it because `tools/review-screen/rubric.spec.ts` checks that every rule's cited file exists, and a path missing from the list fails only under Stryker, never under plain vitest.

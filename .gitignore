@@ -70,16 +70,23 @@ npm-debug.log*
 # compiled React profile aggregator
 /tools/profiling/dist/
 
-# compiled mutation-testing CLI, its reports and Stryker's per-run sandbox
-/tools/mutation-testing/dist/
+# mutation-testing per-run compile output, reports, Stryker's sandbox and the run lock
+/tools/mutation-testing/.build.*/
 /tools/mutation-testing/reports/
 /tools/mutation-testing/.stryker-tmp/
+/tools/mutation-testing/.lock
 
 # compiled Playwright runner
 /tools/playwright/dist/
 
 # compiled review-screen CLI
 /tools/review-screen/dist/
+
+# compiled design-readout CLI
+/tools/design-readout/dist/
+
+# compiled release tool
+/tools/release/dist/
 
 # typescript
 *.tsbuildinfo
@@ -100,7 +107,6 @@ npm-debug.log*
 # build outputs
 /toolkit/package/dist
 license.json
-release-prs-data.json
 
 .ai
 /ds-bundle

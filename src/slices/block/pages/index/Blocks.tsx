@@ -2,7 +2,6 @@
 
 import { Box } from '@chakra-ui/react';
 import { upperFirst } from 'es-toolkit';
-import { useRouter } from 'next/router';
 import React from 'react';
 
 import type { TabItemRegular } from 'src/toolkit/components/AdaptiveTabs/types';
@@ -20,11 +19,13 @@ import useIsMobile from 'src/shared/hooks/useIsMobile';
 import useApiPaginatedQuery from 'src/shared/pagination/useApiPaginatedQuery';
 import { generateListStub } from 'src/shared/pagination/utils';
 import getQueryParamString from 'src/shared/router/get-query-param-string';
+import { useRouter } from 'src/shared/router/useRouter';
 
 import { useColorModeValue } from 'src/toolkit/chakra/color-mode';
 import RoutedTabs from 'src/toolkit/components/RoutedTabs/RoutedTabs';
 
 const flashblocksFeature = config.features.flashblocks;
+const hiddenViews = config.slices.block.hiddenViews;
 
 const TAB_LIST_PROPS = {
   marginBottom: 0,
@@ -39,11 +40,15 @@ const BlocksPageContent = () => {
   const bgColor = useColorModeValue('white', 'gray.800');
   const tab = getQueryParamString(router.query.tab);
 
+  const isReorgsTab = !hiddenViews?.reorgs && tab === 'reorgs';
+  const isUnclesTab = !hiddenViews?.uncles && tab === 'uncles';
+  const isFlashblocksTab = flashblocksFeature.isEnabled && flashblocksFeature.tabIds.some((id) => id === tab);
+
   const blocksQuery = useApiPaginatedQuery({
     resourceName: 'core:blocks',
     queryParams: { type: 'block' },
     options: {
-      enabled: tab === 'blocks' || !tab,
+      enabled: !isReorgsTab && !isUnclesTab && !isFlashblocksTab,
       placeholderData: generateListStub<'core:blocks'>(BLOCK_ITEM, 50, { next_page_params: {
         block_number: 8988686,
         items_count: 50,
@@ -54,7 +59,7 @@ const BlocksPageContent = () => {
     resourceName: 'core:blocks',
     queryParams: { type: 'reorg' },
     options: {
-      enabled: tab === 'reorgs',
+      enabled: isReorgsTab,
       placeholderData: generateListStub<'core:blocks'>(BLOCK_ITEM, 50, { next_page_params: {
         block_number: 8988686,
         items_count: 50,
@@ -65,7 +70,7 @@ const BlocksPageContent = () => {
     resourceName: 'core:blocks',
     queryParams: { type: 'uncle' },
     options: {
-      enabled: tab === 'uncles',
+      enabled: isUnclesTab,
       placeholderData: generateListStub<'core:blocks'>(BLOCK_ITEM, 50, { next_page_params: {
         block_number: 8988686,
         items_count: 50,
@@ -73,13 +78,11 @@ const BlocksPageContent = () => {
     },
   });
 
-  const isFlashblocksTab = flashblocksFeature.isEnabled && flashblocksFeature.tabIds.some((id) => id === tab);
-
   const pagination = (() => {
-    if (tab === 'reorgs') {
+    if (isReorgsTab) {
       return reorgsQuery.pagination;
     }
-    if (tab === 'uncles') {
+    if (isUnclesTab) {
       return unclesQuery.pagination;
     }
     if (isFlashblocksTab) {
@@ -91,8 +94,8 @@ const BlocksPageContent = () => {
   const tabs: Array<TabItemRegular> = [
     { id: 'blocks', title: 'All', component: <BlocksContent type="block" query={ blocksQuery }/> },
     flashblocksFeature.isEnabled && { id: flashblocksFeature.tabIds, title: upperFirst(flashblocksFeature.name) + 's', component: <Flashblocks/> },
-    { id: 'reorgs', title: 'Forked', component: <BlocksContent type="reorg" query={ reorgsQuery }/> },
-    { id: 'uncles', title: 'Uncles', component: <BlocksContent type="uncle" query={ unclesQuery }/> },
+    !hiddenViews?.reorgs && { id: 'reorgs', title: 'Forked', component: <BlocksContent type="reorg" query={ reorgsQuery }/> },
+    !hiddenViews?.uncles && { id: 'uncles', title: 'Uncles', component: <BlocksContent type="uncle" query={ unclesQuery }/> },
   ].filter(Boolean);
 
   return (
@@ -101,7 +104,7 @@ const BlocksPageContent = () => {
       <RoutedTabs
         tabs={ tabs }
         listProps={ isMobile ? undefined : TAB_LIST_PROPS }
-        rightSlot={ <BlocksTabSlot pagination={ pagination }/> }
+        rightSlot={ isMobile ? undefined : <BlocksTabSlot pagination={ pagination }/> }
         stickyEnabled={ !isMobile && !isFlashblocksTab }
       />
     </Box>

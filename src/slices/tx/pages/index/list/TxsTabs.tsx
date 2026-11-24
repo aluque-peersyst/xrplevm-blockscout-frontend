@@ -2,7 +2,6 @@
 
 import { Flex } from '@chakra-ui/react';
 import { capitalize } from 'es-toolkit';
-import { useRouter } from 'next/router';
 import React from 'react';
 
 import type { TabItemRegular } from 'src/toolkit/components/AdaptiveTabs/types';
@@ -22,6 +21,7 @@ import Pagination from 'src/shared/pagination/Pagination';
 import useApiPaginatedQuery from 'src/shared/pagination/useApiPaginatedQuery';
 import { generateListStub } from 'src/shared/pagination/utils';
 import getQueryParamString from 'src/shared/router/get-query-param-string';
+import { useRouter } from 'src/shared/router/useRouter';
 
 import type { RoutedTabsProps } from 'src/toolkit/components/RoutedTabs/RoutedTabs';
 import RoutedTabs from 'src/toolkit/components/RoutedTabs/RoutedTabs';
@@ -115,6 +115,7 @@ const TxsTabs = ({ parentTab, tabsHeight, ...rest }: Props) => {
           query={ txsValidatedQuery }
           socketType="txs_validated"
           top={ tabsHeight }
+          withBlockSort={ false }
         /> },
     !chainConfig?.slices.tx.hiddenViews?.pending_txs ? {
       id: getTabId('pending', parentTab),
@@ -135,6 +136,7 @@ const TxsTabs = ({ parentTab, tabsHeight, ...rest }: Props) => {
         <TxsWithFrontendSorting
           query={ txsWithBlobsQuery }
           top={ tabsHeight }
+          withBlockSort={ false }
         />
       ),
     },

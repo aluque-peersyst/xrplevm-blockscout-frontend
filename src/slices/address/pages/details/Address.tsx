@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: LicenseRef-Blockscout
 
 import { Box, Flex, HStack } from '@chakra-ui/react';
-import { useRouter } from 'next/router';
 import React from 'react';
 
 import type { MetadataTag } from 'src/features/address-metadata/components/tag/types';
@@ -64,6 +63,7 @@ import useFetchXStarScore from 'src/features/x-star-score/hooks/useFetchXStarSco
 import config from 'src/config';
 import getQueryParamString from 'src/shared/router/get-query-param-string';
 import useEtherscanRedirects from 'src/shared/router/useEtherscanRedirects';
+import { useRouter } from 'src/shared/router/useRouter';
 import SpriteIcon from 'src/sprite/SpriteIcon';
 
 import { useColorModeValue } from 'src/toolkit/chakra/color-mode';
@@ -477,8 +477,10 @@ const AddressPageContent = () => {
         secondRow={ titleSecondRow }
         isLoading={ isLoading }
       />
-      { !addressMetadataQuery.isPending &&
-        <AddressAlerts tags={ addressMetadataQuery.data?.addresses?.[hash.toLowerCase()]?.tags }/> }
+      <AddressAlerts
+        tags={ addressMetadataQuery.data?.addresses?.[hash.toLowerCase()]?.tags }
+        isScamAddress={ addressQuery.data?.is_scam }
+      />
       { config.features.metasuites.isEnabled && <Box display="none" id="meta-suites__address" data-ready={ !isLoading }/> }
       <RoutedTabs tabs={ tabs } isLoading={ isTabsLoading }/>
     </Box>

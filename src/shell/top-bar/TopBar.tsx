@@ -19,6 +19,7 @@ import { useColorModeValue } from 'src/toolkit/chakra/color-mode';
 
 import NetworkMenu from './chain-menu/ChainMenu';
 import Settings from './settings/Settings';
+import TopBarCustomRpc from './TopBarCustomRpc';
 import TopBarStats from './TopBarStats';
 
 const TopBar = () => {
@@ -71,6 +72,7 @@ const TopBar = () => {
             </HStack>
           ) }
           <HStack gap={ 0 }>
+            <TopBarCustomRpc/>
             <CsvExportDownloads/>
             <Settings/>
           </HStack>

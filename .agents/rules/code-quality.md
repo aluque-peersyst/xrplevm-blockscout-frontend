@@ -10,7 +10,10 @@ alwaysApply: false
 We use ESLint, cSpell, TypeScript to maintain code quality.
 
 ```bash
-pnpm lint:eslint:fix
+pnpm lint:eslint --fix                       # whole repo
+pnpm lint:eslint path/to/file.tsx            # one file or directory
+pnpm lint:eslint --changed                   # this branch vs origin/main, including uncommitted and untracked files
+pnpm lint:eslint --changed=<ref> --fix       # another base; eslint flags such as --fix pass through
 pnpm lint:tsc
 pnpm lint:cspell
 ```
@@ -199,7 +202,7 @@ const onMouseMove = useCallback(() => {}, [ ]);
 
 ### Links
 
-When links to **application pages** are constructed, verify that `nextjs-routes` or `src/shared/router/routes` utilities are used instead of string concatenation or template literals. The full list of application routes is available in `src/shared/router/nextjs-routes.d.ts`.
+When links to **application pages** are constructed, verify that `route()` from `src/shared/router/routes` is used instead of string concatenation or template literals. The same module is the only import surface for the `Route` / `Query` / `DynamicRoute` types. The full list of application routes is available in `src/shared/router/nextjs-routes.d.ts`.
 
 ### Date and time
 

@@ -58,18 +58,18 @@ And of course our premier language is [Typescript](https://www.typescriptlang.or
 
 To develop locally, follow one of the two paths outlined below:
 
-A. Custom configuration:
-
-1. Create `.env.local` file in the root folder and include all required environment variables from the [list](./ENVS.md)
-2. Optionally, clone `.env.example` and name it `.env.secrets`. Fill it with necessary secrets for integrating with [external services](./ENVS.md#external-services-configuration). Include only secrets you need.
-3. Use `pnpm dev` command to start the Dev Server.
-4. Open your browser and navigate to the URL provided in the command line output (by default, it is `http://localhost:3000`).
-
-B. Pre-defined configuration (fetched from a live instance):
+A. Pre-defined configuration (fetched from a live instance):
 
 1. Optionally, clone `.env.example` file into `.env.secrets` (repo root). Fill it with necessary secrets for integrating with [external services](./ENVS.md#external-services-configuration). Include only secrets you need. (Most public keys already come from the fetched instance config.)
 2. Choose an instance alias from `tools/dev-server/registry.json` (for example, `eth` or `base`).
-3. Start your local Dev Server using the `pnpm dev:preset <alias>` command — it fetches that instance's config from `<url>/node-api/config` at startup and writes it to `.env.tmp`. To run against a local backend instead, use `pnpm dev:local`.
+3. Start your local Dev Server using the `pnpm dev:preset <alias>` command — it fetches that instance's config from `<url>/node-api/config` at startup and writes it to `.env.tmp`.
+4. Open your browser and navigate to the URL provided in the command line output (by default, it is `http://localhost:3000`).
+
+B. Local backend or custom configuration:
+
+1. Optionally, clone `.env.example` and name it `.env.secrets`, as above.
+2. To run against a locally running Blockscout backend, nothing else is needed — the committed `tools/dev-server/.env.localhost` is the base config. For a custom configuration, create `.env.local` in the root folder with the environment variables from the [list](./ENVS.md); it overrides `.env.localhost`.
+3. Start your local Dev Server using the `pnpm dev:local` command.
 4. Open your browser and navigate to the URL provided in the command line output (by default, it is `http://localhost:3000`).
 
 To add or override an ENV for your branch (e.g. a new variable not yet on the instance), put it in the committed `.env.extra` file — it is layered over the fetched config for both the dev server and the review deploy. Personal, local-only overrides go in `.env.local` (git-ignored).
@@ -105,16 +105,9 @@ These are the steps that you have to follow to make everything work:
 5. Add the variable to CI configs where it is needed
     - `deploy/values/review/values.yaml.gotmpl` - review development environment
     - `deploy/values/review-2/values.yaml.gotmpl` - review development environment (second instance)
-6. If your variable is meant to receive a link to some external resource (image or JSON-config file), extend the array `ASSETS_ENVS` in `deploy/scripts/download_assets.sh` with your variable name
-7. Add validation schema for the new variable into the file `deploy/tools/envs-validator/schema.ts`
-8. Check if modified validation schema is valid by doing the following steps:
-    - change your current directory to `deploy/tools/envs-validator`
-    - install deps with `pnpm` command
-    - add your variable into `./test/.env.base` test preset or create a new test preset if needed
-    - if your variable contains a link to the external JSON config file:
-      - add example of file content into `./test/assets` directory; the file name should be constructed by stripping away prefix `NEXT_PUBLIC_` and postfix `_URL` if any, and converting the remaining string to lowercase (for example, `NEXT_PUBLIC_MARKETPLACE_CONFIG_URL` will become `marketplace_config.json`)
-      - in the main script `index.ts` extend array `envsWithJsonConfig` with your variable name
-    - run `pnpm test` command to see the validation result
+6. If your variable is meant to receive a link to some external resource (image, JSON-config file or HTML snippet), register it in `ASSET_ENVS` in `deploy/tools/assets-downloader/assets.ts`; Step 5 of `.agents/skills/add-env-var/SKILL.md` describes the registration
+7. Add a validation rule for the new variable to the schemas in `deploy/tools/envs-validator` and cover it in the sibling `*.spec.ts` file; `deploy/tools/envs-validator/CONTEXT.md` describes where the rule goes and how the specs are written
+8. Run `pnpm test:vitest deploy/tools/envs-validator` to see the validation result
 9. Don't forget to mention in the PR notes that new ENV variable was added  
 
 &nbsp;
@@ -179,13 +172,19 @@ Run the tests with `pnpm test:pw` (the whole suite) or `pnpm test:pw --changed` 
 1. Push your changes and create a Pull Request. If you are still working on the task, please use "Draft Pull Request" option, so we know that it is not ready yet. In addition, you can add label "skip checks" to your PR, so all CI checks will not be triggered. 
 2. Once you finish your work, remove label "skip checks" from PR, if it was added before, and publish PR if it was in the draft state
 3. Make sure that all code checks and tests are successfully passed
-4. Add description to your Pull Request and link an existing issue(s) that it is fixing
+4. Fill in every section of the Pull Request template, link the issue(s) it fixes, and add a category label; the PR check enforces both, see the [label rules](./RELEASING.md#labels)
 5. Request review from one or all core team members: @tom2drum, @isstuev. Our core team is committed to reviewing patches in a timely manner.
 6. After code review is done, we merge pull requests by squashing all commits and editing the commit message if necessary using the GitHub user interface.
 
-*Note*, if you Pull Request contains any changes that are not backwards compatible with the previous versions of the app, please specify them in PR description and add label ["breaking changes"](https://github.com/blockscout/frontend/labels/breaking%20changes) to it.
+*Note*, if you Pull Request contains any changes that are not backwards compatible with the previous versions of the app, please specify them in PR description and add the `breaking changes` label to it (all labels are described in [ISSUE_LABELS.md](./ISSUE_LABELS.md)).
 
 *Note*, if your Pull Request adds a feature that is not privacy-compliant (e.g. tracking, analytics, or a third-party service), make sure it is disabled in private mode, so a privacy-focused deployment can turn it off.
+
+&nbsp;
+
+## Releasing
+
+How a release is cut, put on staging and published, and how a merged PR gets into one, is in [RELEASING.md](./RELEASING.md).
 
 &nbsp;
 
@@ -194,14 +193,14 @@ Run the tests with `pnpm test:pw` (the whole suite) or `pnpm test:pw --changed` 
 | Command | Description |
 | --- | --- |
 | **Running and building** |
-| `pnpm dev` | run local Dev Server with user's configuration |
 | `pnpm dev:preset <config_preset_name>` | run local Dev Server with predefined configuration |
+| `pnpm dev:local` | run local Dev Server against a local backend / user's configuration |
+| `pnpm prod:preset <config_preset_name>` | production build + start with predefined configuration |
 | `pnpm build:docker` | build a docker image locally |
-| `pnpm start:docker:local` | start an application from previously built local docker image with user's configuration |
+| `pnpm start:docker:local` | start an application from previously built local docker image against a local backend / user's configuration |
 | `pnpm start:docker:preset <config_preset_name>` | start an application from previously built local docker image with predefined configuration |
 | **Linting and formatting** |
-| `pnpm lint:eslint` | lint project files with ESLint |
-| `pnpm lint:eslint:fix` | lint project files with ESLint and automatically fix problems |
+| `pnpm lint:eslint [--changed[=<ref>]] [--fix] [<path>...]` | lint project files with ESLint: the whole repo, the given paths, or the files changed vs `<ref>` (default `origin/main`); `--fix` and other eslint flags pass through |
 | `pnpm lint:tsc` | compile project typescript files using TypeScript Compiler |
 | `pnpm svg:format` | format and optimize SVG icons in the `/icons` folder using SVGO tool |
 | `pnpm svg:build-sprite` | build SVG icons sprite |

@@ -80,7 +80,15 @@ test('example', async ({ render }) => {
 });
 ```
 
-`render` accepts optional second and third arguments to customize `hooksConfig` (mainly used for mocking Next.js router object), `appContext` and `marketplaceContext` props passed to `TestApp`.
+`render` accepts optional second and third arguments to customize `hooksConfig` (its `router` field is typed by `AppHooksConfig` in `playwright/fixtures/render.tsx`: the serializable `query`, `pathname` and `asPath`, which `TestApp` merges over an empty default and feeds to the toolkit router provider), `appContext` and `marketplaceContext` props passed to `TestApp`.
+
+## Mock flow
+
+The mock fixtures and the catch-all route in `playwright/lib.ts` form one pipeline; a test is written in this order:
+
+1. **Envs and feature flags first.** `mockEnvs` and `mockFeatures` write to `localStorage`, which the app config in the test page reads once, at its first evaluation.
+2. **Then every request mock.** `mockApiResponse` and `mockConfigResponse` resolve their matcher URL in the test page with the production URL builder, so the matcher reflects the envs mocked in step 1 and the caller passes only the path and query params the component itself passes, never env-derived ones. The first such registration evaluates the app config in the page; a `mockEnvs` after it throws, naming both calls.
+3. **Then `render`.** Every `localhost` request the component makes must be answered by a mock from step 2 (the component-test server and the socket server ports excepted). A request that reaches no mock fails the test with the URL next to the registered matchers sharing its pathname, so a query-param drift shows side by side. There is no per-test opt-out: a test that shows a failure state mocks the request with an error status instead of leaving it unmocked. Requests to hosts other than `localhost` are aborted silently.
 
 ## Fixtures
 
@@ -193,8 +201,10 @@ page.getByTestId('tx-hash')
 ## Environment and date
 
 `playwright/lib.ts` runs before every component mount and:
-- Mocks `next/router.useRouter()` with a configurable router object.
+- Clears `localStorage`, so envs and feature flags from a previous test in the same worker do not leak in.
 - Fixes the current date to `2022-11-11T12:00:00Z` via MockDate — all `new Date()` / `Date.now()` calls return this value.
+
+The router is not mocked at the module level: `TestApp` mounts the toolkit router provider with `hooksConfig.router` layered over an empty default, and the component reaches it through the `src/shared/router` facade hooks (see Component mounting). `hooksConfig` is serialized on its way into the page, so only `query`, `pathname` and `asPath` can be set there (`AppHooksConfig` in `playwright/fixtures/render.tsx`); `push` and `replace` stay the defaults, which resolve `true` without navigating.
 
 ## Mock data
 

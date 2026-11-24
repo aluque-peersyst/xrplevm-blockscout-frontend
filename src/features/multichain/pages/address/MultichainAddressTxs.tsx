@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: LicenseRef-Blockscout
 
 import { Flex, HStack } from '@chakra-ui/react';
-import { useRouter } from 'next/router';
 import React from 'react';
 
 import type * as multichain from '@blockscout/multichain-aggregator-types';
@@ -31,6 +30,7 @@ import Pagination from 'src/shared/pagination/Pagination';
 import useApiPaginatedQuery from 'src/shared/pagination/useApiPaginatedQuery';
 import { generateListStub } from 'src/shared/pagination/utils';
 import getQueryParamString from 'src/shared/router/get-query-param-string';
+import { useRouter } from 'src/shared/router/useRouter';
 
 import { EmptyState } from 'src/toolkit/chakra/empty-state';
 import RoutedTabs from 'src/toolkit/components/RoutedTabs/RoutedTabs';
@@ -171,22 +171,23 @@ const MultichainAddressTxs = ({ addressData, isLoading }: Props) => {
       id: 'txs_cross_chain',
       title: 'Cross-chain',
       component: config.features.crossChainTxs.isEnabled ? (
-        <>
-          { isMobile && !isLocalTab && txsQueryCrossChain.pagination.isVisible && (
+        <TransactionsCrossChainContent
+          items={ txsQueryCrossChain.data?.items }
+          pagination={ txsQueryCrossChain.pagination }
+          isLoading={ txsQueryCrossChain.isInitialLoading }
+          isTransitioning={ txsQueryCrossChain.isTransitioning }
+          isError={ txsQueryCrossChain.isError }
+          stickyHeader
+          currentAddress={ hash }
+          resetKey={ txsQueryCrossChain.queryHash }
+          filters={ txsQueryCrossChain.filters }
+          onFilterChange={ txsQueryCrossChain.onFilterChange }
+          actionBar={ isMobile && !isLocalTab && txsQueryCrossChain.pagination.isVisible && (
             <ActionBar>
               <Pagination ml="auto" { ...txsQueryCrossChain.pagination }/>
             </ActionBar>
           ) }
-          <TransactionsCrossChainContent
-            items={ txsQueryCrossChain.data?.items }
-            pagination={ txsQueryCrossChain.pagination }
-            isLoading={ txsQueryCrossChain.isInitialLoading }
-            isTransitioning={ txsQueryCrossChain.isTransitioning }
-            isError={ txsQueryCrossChain.isError }
-            stickyHeader
-            currentAddress={ hash }
-          />
-        </>
+        />
       ) : <EmptyState type="coming_soon"/>,
     },
     {

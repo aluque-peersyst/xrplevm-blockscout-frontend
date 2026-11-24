@@ -13,7 +13,6 @@ import Blocks from './Blocks';
 const hooksConfig = {
   router: {
     query: { tab: 'blocks' },
-    isReady: true,
   },
 };
 
@@ -25,7 +24,7 @@ test.beforeEach(async({ mockTextAd }) => {
   await mockTextAd();
 });
 
-test('base view +@dark-mode', async({ render, mockApiResponse }) => {
+test('base view +@mobile +@dark-mode', async({ render, mockApiResponse }) => {
   await mockApiResponse('core:blocks', baseListResponse, { queryParams: { type: 'block' } });
   await mockApiResponse('core:stats', statsMock.base);
 
@@ -34,9 +33,10 @@ test('base view +@dark-mode', async({ render, mockApiResponse }) => {
   await expect(component).toHaveScreenshot();
 });
 
-test('hidden fields', async({ render, mockApiResponse, mockEnvs }) => {
+test('hidden fields and views', async({ render, mockApiResponse, mockEnvs }) => {
   await mockEnvs([
     ...ENVS_MAP.blockHiddenFields,
+    ...ENVS_MAP.blockHiddenViews,
     [ 'NEXT_PUBLIC_VIEWS_BLOCK_PENDING_UPDATE_ALERT_ENABLED', 'false' ],
   ]);
   await mockApiResponse('core:blocks', baseListResponse, { queryParams: { type: 'block' } });
@@ -49,6 +49,7 @@ test('hidden fields', async({ render, mockApiResponse, mockEnvs }) => {
 
 test('new item from socket', async({ render, mockApiResponse, createSocket }) => {
   await mockApiResponse('core:blocks', baseListResponse, { queryParams: { type: 'block' } });
+  await mockApiResponse('core:stats', statsMock.base);
 
   const component = await render(<Blocks/>, { hooksConfig }, { withSocket: true });
 
@@ -68,6 +69,7 @@ test('new item from socket', async({ render, mockApiResponse, createSocket }) =>
 
 test('socket error', async({ render, mockApiResponse, createSocket }) => {
   await mockApiResponse('core:blocks', baseListResponse, { queryParams: { type: 'block' } });
+  await mockApiResponse('core:stats', statsMock.base);
 
   const component = await render(<Blocks/>, { hooksConfig }, { withSocket: true });
 
